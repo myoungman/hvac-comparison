@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HVAC Replacement Analysis — 6363 Burton Circle</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2333;
+    --border: #2a3045;
+    --accent: #4f9cf9;
+    --accent2: #f97b4f;
+    --accent3: #4fca8c;
+    --warn: #f9c44f;
+    --text: #e8ecf4;
+    --text-muted: #8892a8;
+    --text-dim: #505870;
+    --winner: #1a2d1f;
+    --winner-border: #4fca8c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0f1820 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(79,156,249,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: 30%;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(79,202,140,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .header-sub {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 300;
+  }
+
+  /* NAV TABS */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 0 40px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* SECTIONS */
+  .section { display: none; padding: 40px; max-width: 1200px; margin: 0 auto; }
+  .section.active { display: block; }
+
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    font-weight: 400;
+    margin-bottom: 6px;
+  }
+  h3 {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  .section-intro {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 32px;
+    max-width: 700px;
+  }
+
+  /* COMPARISON TABLE */
+  .table-wrap { overflow-x: auto; margin-bottom: 40px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: var(--surface2); }
+  thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  thead th:first-child { border-radius: 6px 0 0 0; }
+  thead th:last-child { border-radius: 0 6px 0 0; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.winner {
+    background: var(--winner);
+    border-left: 3px solid var(--winner-border);
+  }
+  tbody tr.winner:hover { background: #1e3324; }
+
+  td {
+    padding: 13px 16px;
+    vertical-align: middle;
+    color: var(--text);
+  }
+  td.price {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  td.muted { color: var(--text-muted); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    white-space: nowrap;
+  }
+  .badge-green { background: rgba(79,202,140,0.15); color: var(--accent3); border: 1px solid rgba(79,202,140,0.3); }
+  .badge-blue { background: rgba(79,156,249,0.15); color: var(--accent); border: 1px solid rgba(79,156,249,0.3); }
+  .badge-orange { background: rgba(249,123,79,0.15); color: var(--accent2); border: 1px solid rgba(249,123,79,0.3); }
+  .badge-warn { background: rgba(249,196,79,0.15); color: var(--warn); border: 1px solid rgba(249,196,79,0.3); }
+  .badge-dim { background: rgba(80,88,112,0.2); color: var(--text-muted); border: 1px solid var(--border); }
+
+  .winner-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent3);
+    font-family: 'DM Mono', monospace;
+  }
+  .winner-tag::before { content: '★'; }
+
+  /* CARDS */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card.card-winner { border-color: var(--winner-border); background: linear-gradient(135deg, var(--winner) 0%, var(--surface) 100%); }
+  .card.card-premium { border-color: rgba(79,156,249,0.4); }
+
+  .card-tier {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+  }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .card-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .card-price span {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .card-specs { list-style: none; margin-bottom: 16px; }
+  .card-specs li {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .card-specs li:last-child { border-bottom: none; }
+  .card-specs .spec-label { color: var(--text-muted); }
+  .card-specs .spec-val { font-weight: 500; text-align: right; }
+  .card-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .card-tag {
+    position: absolute;
+    top: -1px; right: 16px;
+    background: var(--accent3);
+    color: #0a1a12;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    padding: 3px 10px;
+    border-radius: 0 0 6px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .card-tag.premium { background: var(--accent); color: #0a1020; }
+
+  /* INSIGHT BOXES */
+  .insight {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  .insight.warn { border-left-color: var(--warn); }
+  .insight.good { border-left-color: var(--accent3); }
+  .insight .insight-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+  .insight.warn .insight-label { color: var(--warn); }
+  .insight.good .insight-label { color: var(--accent3); }
+
+  /* DECISION MATRIX */
+  .matrix { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 32px; }
+  .matrix-cell {
+    background: var(--surface);
+    padding: 20px;
+  }
+  .matrix-cell.header {
+    background: var(--surface2);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .matrix-q { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .matrix-a { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  .matrix-rec { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--accent3); margin-top: 8px; }
+
+  /* DB CHART */
+  .db-bars { display: flex; flex-direction: column; gap: 10px; }
+  .db-row { display: grid; grid-template-columns: 200px 1fr 60px; align-items: center; gap: 12px; }
+  .db-label { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .db-bar-wrap { background: var(--surface2); border-radius: 4px; height: 20px; overflow: hidden; position: relative; }
+  .db-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  .db-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-muted); text-align: right; }
+  .db-val.highlight { color: var(--accent3); font-weight: 600; }
+
+  /* SEER CHART */
+  .seer-bars { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+  .seer-row { display: grid; grid-template-columns: 200px 1fr 60px; align-items: center; gap: 12px; }
+
+  /* FOOTER */
+  footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    header, .tabs, .section { padding-left: 20px; padding-right: 20px; }
+    .matrix { grid-template-columns: 1fr; }
+    .cards { grid-template-columns: 1fr; }
+    .db-row, .seer-row { grid-template-columns: 140px 1fr 50px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-label">HVAC Replacement Analysis · May 2026</div>
+  <h1>6363 Burton Circle<br><em>Falls Church, VA</em></h1>
+  <div class="header-sub">3-Ton System · 4 Contractors · 9 Quotes Evaluated</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('overview')">Overview</button>
+  <button class="tab" onclick="showTab('comparison')">Full Comparison</button>
+  <button class="tab" onclick="showTab('recommendations')">Recommendations</button>
+  <button class="tab" onclick="showTab('specs')">Specs & Charts</button>
+  <button class="tab" onclick="showTab('context')">Key Findings</button>
+</div>
+
+<!-- ============================================================ OVERVIEW -->
+<div id="overview" class="section active">
+  <h2>Situation</h2>
+  <h3>What you're replacing</h3>
+  <p class="section-intro">17-year-old 3-ton system: leaking evaporator coil and AC unit, 2-stage 100k BTU furnace with single-speed blower. Three contractors visited, four submitted quotes across nine configurations.</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-tier" style="color:var(--accent2)">Budget Pick</div>
+      <div class="card-title">Carrier Performance</div>
+      <div class="card-price">$12,780 <span>ex thermostat</span></div>
+      <ul class="card-specs">
+        <li><span class="spec-label">Contractor</span><span class="spec-val">Residential Express</span></li>
+        <li><span class="spec-label">AC Compressor</span><span class="spec-val">Single-stage</span></li>
+        <li><span class="spec-label">SEER2</span><span class="spec-val">16.5</span></li>
+        <li><span class="spec-label">Outdoor dB</span><span class="spec-val">69 dB</span></li>
+        <li><span class="spec-label">Furnace</span><span class="spec-val">58SPO 80% AFUE</span></li>
+        <li><span class="spec-label">Blower</span><span class="spec-val">Variable-speed</span></li>
+        <li><span class="spec-label">Labor warranty</span><span class="spec-val">3 years</span></li>
+        <li><span class="spec-label">Thermostat</span><span class="spec-val">Use Nest ✓</span></li>
+      </ul>
+      <div class="card-note">Ecobee removed from quote. Rebate already applied.</div>
+    </div>
+
+    <div class="card card-winner">
+      <div class="card-tag">Sweet Spot</div>
+      <div class="card-tier" style="color:var(--accent3)">Best Value</div>
+      <div class="card-title">Goodman GXV6SS</div>
+      <div class="card-price">$15,572 <span>ex chimney kit</span></div>
+      <ul class="card-specs">
+        <li><span class="spec-label">Contractor</span><span class="spec-val">Reddick & Sons</span></li>
+        <li><span class="spec-label">AC Compressor</span><span class="spec-val" style="color:var(--accent3)">Variable-speed inverter</span></li>
+        <li><span class="spec-label">SEER2</span><span class="spec-val">17.2</span></li>
+        <li><span class="spec-label">Outdoor dB</span><span class="spec-val" style="color:var(--accent3)">45 dB (quiet mode)</span></li>
+        <li><span class="spec-label">Furnace</span><span class="spec-val">GRVT80 80% AFUE</span></li>
+        <li><span class="spec-label">Blower</span><span class="spec-val">Variable-speed</span></li>
+        <li><span class="spec-label">Compressor warranty</span><span class="spec-val" style="color:var(--accent3)">Lifetime + replacement</span></li>
+        <li><span class="spec-label">Thermostat</span><span class="spec-val">Daikin One Touch (req.)</span></li>
+      </ul>
+      <div class="card-note">All Reddick discounts applied. Chimney kit (~$840) additional.</div>
+    </div>
+
+    <div class="card card-premium">
+      <div class="card-tag premium">Premium</div>
+      <div class="card-tier" style="color:var(--accent)">Top of Market</div>
+      <div class="card-title">Carrier Infinity</div>
+      <div class="card-price">$18,151 <span>all-in</span></div>
+      <ul class="card-specs">
+        <li><span class="spec-label">Contractor</span><span class="spec-val">Residential Express</span></li>
+        <li><span class="spec-label">AC Compressor</span><span class="spec-val" style="color:var(--accent)">Variable-speed inverter</span></li>
+        <li><span class="spec-label">SEER2</span><span class="spec-val" style="color:var(--accent)">21</span></li>
+        <li><span class="spec-label">Outdoor dB</span><span class="spec-val">55 dB</span></li>
+        <li><span class="spec-label">Furnace</span><span class="spec-val">58TN0 80% AFUE</span></li>
+        <li><span class="spec-label">Blower</span><span class="spec-val">Variable-speed</span></li>
+        <li><span class="spec-label">Labor warranty</span><span class="spec-val">3 years</span></li>
+        <li><span class="spec-label">Thermostat</span><span class="spec-val">Infinity Control (req.)</span></li>
+      </ul>
+      <div class="card-note">$1,700 rebate already applied. Nest incompatible.</div>
+    </div>
+  </div>
+
+  <div class="insight good">
+    <div class="insight-label">Key Insight</div>
+    The Goodman GXV6SS36 is a variable-speed inverter compressor — same performance tier as the Carrier Infinity — at $2,579 less, with a quieter outdoor unit in quiet mode (45 vs 55 dB) and a superior lifetime compressor warranty with full unit replacement.
+  </div>
+  <div class="insight warn">
+    <div class="insight-label">Note</div>
+    Every quote across all four contractors uses an 80% AFUE furnace. No contractor offered a high-efficiency (96%+) option unprompted. A 96% AFUE furnace would save ~$150–250/year in gas but requires PVC venting and a chimney liner for the water heater.
+  </div>
+  <div class="insight">
+    <div class="insight-label">Thermostat</div>
+    Variable-speed inverter systems (Goodman GXV6SS and Carrier Infinity) require proprietary communicating thermostats. Your Nest works with single-stage and two-stage systems (Carrier Performance, Trane Premium) but not with the inverter options.
+  </div>
+</div>
+
+<!-- ============================================================ COMPARISON -->
+<div id="comparison" class="section">
+  <h2>All Quotes</h2>
+  <h3>Apples-to-apples · chimney kit excluded from all</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Contractor</th>
+          <th>System</th>
+          <th>Price</th>
+          <th>AC Compressor</th>
+          <th>SEER2</th>
+          <th>Outdoor dB</th>
+          <th>Furnace BTU</th>
+          <th>AFUE</th>
+          <th>Blower</th>
+          <th>Labor Warranty</th>
+          <th>Nest?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Residential Express</td>
+          <td>Carrier Comfort (Good)</td>
+          <td class="price">$12,072</td>
+          <td><span class="badge badge-dim">Single-stage</span></td>
+          <td>16.5</td>
+          <td class="muted">71</td>
+          <td class="muted">90k</td>
+          <td class="muted">80%</td>
+          <td class="muted">Const. torque ECM</td>
+          <td class="muted">3 yr</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Reddick & Sons</td>
+          <td>Goodman Multi-speed</td>
+          <td class="price">$12,612</td>
+          <td><span class="badge badge-dim">Single-stage</span></td>
+          <td>15.2</td>
+          <td class="muted">67*</td>
+          <td class="muted">100k</td>
+          <td class="muted">80%</td>
+          <td class="muted">9-speed ECM</td>
+          <td class="muted">2 yr</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Residential Express</td>
+          <td>Carrier Performance (Better)</td>
+          <td class="price">~$12,780</td>
+          <td><span class="badge badge-dim">Single-stage</span></td>
+          <td>16.5</td>
+          <td class="muted">69</td>
+          <td class="muted">90k</td>
+          <td class="muted">80%</td>
+          <td class="muted">Variable-speed</td>
+          <td class="muted">3 yr</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Reddick & Sons</td>
+          <td>Goodman Variable-speed</td>
+          <td class="price">$13,452</td>
+          <td><span class="badge badge-dim">Single-stage</span></td>
+          <td>15.2</td>
+          <td class="muted">67*</td>
+          <td class="muted">100k</td>
+          <td class="muted">80%</td>
+          <td class="muted">Variable-speed</td>
+          <td class="muted">2 yr</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>C.D. Shanahan (Trane)</td>
+          <td>Economy (5TTR4)</td>
+          <td class="price">$13,397</td>
+          <td><span class="badge badge-dim">Single-stage</span></td>
+          <td>14.3</td>
+          <td class="muted">—</td>
+          <td class="muted">80k</td>
+          <td class="muted">80%</td>
+          <td class="muted">Variable-speed</td>
+          <td class="muted">—</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>C.D. Shanahan (Trane)</td>
+          <td>Standard (5TTR5)</td>
+          <td class="price">$14,540</td>
+          <td><span class="badge badge-dim">Single-stage</span></td>
+          <td>15.2</td>
+          <td class="muted">—</td>
+          <td class="muted">80k</td>
+          <td class="muted">80%</td>
+          <td class="muted">Variable-speed</td>
+          <td class="muted">—</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>C.D. Shanahan (Trane)</td>
+          <td>Premium (5TTR7)</td>
+          <td class="price">$15,742</td>
+          <td><span class="badge badge-orange">Two-stage</span></td>
+          <td>17.1</td>
+          <td class="muted">—</td>
+          <td class="muted">80k</td>
+          <td class="muted">80%</td>
+          <td class="muted">Variable-speed</td>
+          <td class="muted">—</td>
+          <td>✓</td>
+        </tr>
+        <tr class="winner">
+          <td>Reddick & Sons <span class="winner-tag">Best Value</span></td>
+          <td>Goodman GXV6SS (Upgraded AC)</td>
+          <td class="price">~$15,572</td>
+          <td><span class="badge badge-green">Variable-speed inverter</span></td>
+          <td>17.2</td>
+          <td><strong style="color:var(--accent3)">45 dB (quiet mode)</strong></td>
+          <td class="muted">100k</td>
+          <td class="muted">80%</td>
+          <td class="muted">Variable-speed</td>
+          <td class="muted">2 yr</td>
+          <td>✗ Daikin req.</td>
+        </tr>
+        <tr>
+          <td>Reddick & Sons</td>
+          <td>Lennox Elite (EL16KC1 + SL280VK)</td>
+          <td class="price">~$16,500</td>
+          <td><span class="badge badge-dim">Single-stage</span></td>
+          <td>16</td>
+          <td class="muted">73</td>
+          <td class="muted">~100k</td>
+          <td class="muted">80%</td>
+          <td class="muted">Variable-speed</td>
+          <td class="muted">2 yr</td>
+          <td>✓</td>
+        </tr>
+        <tr>
+          <td>Residential Express</td>
+          <td>Carrier Infinity (Best)</td>
+          <td class="price">$18,151</td>
+          <td><span class="badge badge-blue">Variable-speed inverter</span></td>
+          <td>21</td>
+          <td>55 dB</td>
+          <td class="muted">90k</td>
+          <td class="muted">80%</td>
+          <td class="muted">Variable-speed</td>
+          <td class="muted">3 yr</td>
+          <td>✗ Infinity req.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:12px; color:var(--text-dim); margin-top:-20px; margin-bottom:32px;">* Sean (Reddick) noted skepticism about the 67 dB Goodman spec sheet rating. Chimney kit (~$840) excluded from all Reddick prices for consistency — all contractors would likely charge similarly.</p>
+
+  <div class="insight warn">
+    <div class="insight-label">Sizing Discrepancy</div>
+    Three contractors gave three different furnace BTU answers — 80k (Trane), 90k (Carrier), 100k (Reddick). No contractor appears to have run a Manual J load calculation. Ask each for their sizing rationale. For a well-insulated home your size in Falls Church, 80–90k input is likely correct.
+  </div>
+</div>
+
+<!-- ============================================================ RECOMMENDATIONS -->
+<div id="recommendations" class="section">
+  <h2>Recommendations</h2>
+  <h3>Three paths based on priorities</h3>
+
+  <div class="matrix">
+    <div class="matrix-cell header">If your priority is…</div>
+    <div class="matrix-cell header">The right choice is…</div>
+    <div class="matrix-cell header">Because…</div>
+
+    <div class="matrix-cell">
+      <div class="matrix-q">Budget. Reliable system, lowest spend.</div>
+      <div class="matrix-a">Carrier Performance Better (no Ecobee)</div>
+      <div class="matrix-rec">~$12,780</div>
+    </div>
+    <div class="matrix-cell">
+      <div class="matrix-q" style="color:var(--accent2)">→ Carrier Performance Better</div>
+      <div class="matrix-a">Residential Express, 3-yr labor warranty, variable-speed blower, reputable brand. Use your Nest. Single-stage AC is the compromise — humidity control on mild days will be average.</div>
+    </div>
+    <div class="matrix-cell">
+      <div class="matrix-a">Best price from a reputable installer with thorough documentation. The single-stage compressor is its only weakness.</div>
+    </div>
+
+    <div class="matrix-cell">
+      <div class="matrix-q">Best comfort per dollar. Variable-speed inverter AC without paying Carrier premium.</div>
+      <div class="matrix-a">Goodman GXV6SS Upgraded (Reddick)</div>
+      <div class="matrix-rec" style="color:var(--accent3)">~$15,572</div>
+    </div>
+    <div class="matrix-cell">
+      <div class="matrix-q" style="color:var(--accent3)">→ Reddick Goodman Upgraded</div>
+      <div class="matrix-a">Variable-speed inverter compressor, 45 dB quiet mode (quieter than Carrier Infinity), lifetime compressor warranty with full unit replacement. All discounts already applied. Reddick's installation scope is the most detailed of any quote.</div>
+    </div>
+    <div class="matrix-cell">
+      <div class="matrix-a">Inverter-tier compressor at $2,600 less than Carrier Infinity. Better warranty. Quieter in quiet mode. The strongest value proposition in the entire comparison.</div>
+    </div>
+
+    <div class="matrix-cell">
+      <div class="matrix-q">Best possible system. 10+ year horizon, highest SEER2, most established ecosystem.</div>
+      <div class="matrix-a">Carrier Infinity Best</div>
+      <div class="matrix-rec" style="color:var(--accent)">$18,151</div>
+    </div>
+    <div class="matrix-cell">
+      <div class="matrix-q" style="color:var(--accent)">→ Carrier Infinity Best</div>
+      <div class="matrix-a">21 SEER2, 55 dB outdoor unit, Carrier's mature US parts/dealer ecosystem, Residential Express's 3-year labor warranty. $1,700 rebate already applied. Requires Infinity Control thermostat — Nest goes in drawer.</div>
+    </div>
+    <div class="matrix-cell">
+      <div class="matrix-a">Pays a $2,579 premium over the Goodman for higher SEER2 (21 vs 17.2), longer labor warranty (3 vs 2 yr), and Carrier brand peace-of-mind. Justified for long-term owners who value the brand ecosystem.</div>
+    </div>
+  </div>
+
+  <div class="insight">
+    <div class="insight-label">What to skip</div>
+    <strong>Lennox Elite at ~$16,500:</strong> Premium furnace, single-stage AC compressor. Worse compressor than the Trane Premium for similar money. Hard to justify. &nbsp;·&nbsp;
+    <strong>Trane Premium at $15,742:</strong> Was the best two-stage option before the Reddick upgraded quote arrived. Now leapfrogged — same price as the Goodman inverter, but only two-stage, not variable-speed inverter. &nbsp;·&nbsp;
+    <strong>Trane Ultimate ($20k+):</strong> Diminishing returns. Carrier Infinity is already in this comfort tier for $2k less.
+  </div>
+
+  <div class="insight warn">
+    <div class="insight-label">Before You Sign</div>
+    (1) Confirm combustion air item from Reddick — "may require grilles on pocket door" could add cost. (2) Ask each contractor for Manual J sizing calc. (3) Carrier May 31 deadline: $1,700 rebate is a real Carrier promotion; 5% "End of Winter Sale" discount is contractor discretion and likely extendable.
+  </div>
+</div>
+
+<!-- ============================================================ SPECS -->
+<div id="specs" class="section">
+  <h2>Specs & Charts</h2>
+  <h3>Visual comparison of key metrics</h3>
+
+  <p class="section-intro" style="margin-bottom:24px;">Sound level and efficiency ratings across quoted systems. Lower dB = quieter. Higher SEER2 = more efficient cooling.</p>
+
+  <h3 style="margin-bottom:16px; margin-top:32px;">Outdoor Unit Sound Level (dB) — lower is better</h3>
+  <div class="db-bars" id="db-chart"></div>
+
+  <h3 style="margin-bottom:16px; margin-top:40px;">Cooling Efficiency (SEER2) — higher is better</h3>
+  <div class="seer-bars" id="seer-chart"></div>
+
+  <h3 style="margin-bottom:16px; margin-top:40px;">Compressor Technology Tiers</h3>
+  <div class="cards" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="card">
+      <div class="card-tier" style="color:var(--text-dim)">Tier 1</div>
+      <div class="card-title" style="font-size:16px;">Single-Stage</div>
+      <ul class="card-specs">
+        <li><span class="spec-label">Operation</span><span class="spec-val">100% or off</span></li>
+        <li><span class="spec-label">Humidity control</span><span class="spec-val">Basic</span></li>
+        <li><span class="spec-label">Mild-day comfort</span><span class="spec-val">Average</span></li>
+        <li><span class="spec-label">Quotes at this tier</span><span class="spec-val">6 of 10</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-tier" style="color:var(--accent2)">Tier 2</div>
+      <div class="card-title" style="font-size:16px;">Two-Stage</div>
+      <ul class="card-specs">
+        <li><span class="spec-label">Operation</span><span class="spec-val">65% or 100%</span></li>
+        <li><span class="spec-label">Humidity control</span><span class="spec-val">Good</span></li>
+        <li><span class="spec-label">Mild-day comfort</span><span class="spec-val">Noticeably better</span></li>
+        <li><span class="spec-label">Quotes at this tier</span><span class="spec-val">1 of 10</span></li>
+      </ul>
+    </div>
+    <div class="card card-winner">
+      <div class="card-tag" style="font-size:9px;">Best</div>
+      <div class="card-tier" style="color:var(--accent3)">Tier 3</div>
+      <div class="card-title" style="font-size:16px;">Variable-Speed Inverter</div>
+      <ul class="card-specs">
+        <li><span class="spec-label">Operation</span><span class="spec-val">25–100% continuous</span></li>
+        <li><span class="spec-label">Humidity control</span><span class="spec-val">Excellent</span></li>
+        <li><span class="spec-label">Mild-day comfort</span><span class="spec-val">Best in class</span></li>
+        <li><span class="spec-label">Quotes at this tier</span><span class="spec-val">2 of 10</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ CONTEXT -->
+<div id="context" class="section">
+  <h2>Key Findings</h2>
+  <h3>What we learned through the evaluation</h3>
+
+  <div class="insight warn">
+    <div class="insight-label">Finding 1 — No contractor mentioned compressor staging</div>
+    All contractors led with variable-speed blower as the humidity-control story. The variable-speed <em>compressor</em> is actually the more impactful upgrade for summer comfort in Northern Virginia's humid climate. The blower upgrade is real but secondary.
+  </div>
+  <div class="insight warn">
+    <div class="insight-label">Finding 2 — Universal 80% AFUE across all quotes</div>
+    Not one of four contractors offered or mentioned a high-efficiency (96%+) furnace. The efficiency difference saves ~$150–250/year in gas. Payback is 9–15 years. Switching to 96%+ requires PVC venting and orphans the water heater on the chimney, requiring a liner.
+  </div>
+  <div class="insight warn">
+    <div class="insight-label">Finding 3 — No Manual J calculations</div>
+    Three contractors gave three different furnace BTU answers: 80k, 90k, and 100k. This spread strongly suggests rule-of-thumb sizing rather than load calculations. Your current 100k is likely oversized for the house.
+  </div>
+  <div class="insight good">
+    <div class="insight-label">Finding 4 — Reddick's upgraded quote is the standout</div>
+    The GXV6SS36 is Daikin/Goodman's variable-speed inverter product with a lifetime compressor warranty including full unit replacement — the best warranty in any quote. At ~$15,572 (ex chimney) it undercuts the Carrier Infinity by $2,579 while being quieter in quiet mode.
+  </div>
+  <div class="insight">
+    <div class="insight-label">Finding 5 — Lennox SL280VK is 80% AFUE, not 97%</div>
+    The "SL" Signature prefix on the Lennox furnace denotes Lennox's premium <em>80%</em> furnace line — not high-efficiency. The Lennox Elite package (single-stage AC + SL280VK) offers a premium furnace but the weakest AC compressor for its price tier.
+  </div>
+  <div class="insight">
+    <div class="insight-label">Finding 6 — Chimney kit is a wash</div>
+    Reddick's $840 Chimney Friendly Kit protects masonry chimney liners from 80% furnace condensation. All contractors would need to address this. Excluded from price comparisons as a result.
+  </div>
+  <div class="insight">
+    <div class="insight-label">Finding 7 — Communicating systems require proprietary thermostats</div>
+    Both variable-speed inverter options (Goodman GXV6SS and Carrier Infinity) require their own communicating thermostats to operate in variable-speed mode. A Nest thermostat works only with single-stage and two-stage systems (Carrier Performance, Trane).
+  </div>
+</div>
+
+<footer>
+  Generated May 2026 · HVAC Replacement Analysis · 6363 Burton Circle, Falls Church VA · 3-Ton System
+</footer>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // dB chart
+  const dbData = [
+    { label: 'Lennox Merit ML14KC1', db: 76, color: '#505870' },
+    { label: 'Carrier Comfort 26SCA5', db: 71, color: '#505870' },
+    { label: 'Carrier Performance 26SPA6', db: 69, color: '#505870' },
+    { label: 'Lennox Elite EL16KC1', db: 73, color: '#505870' },
+    { label: 'Carrier Infinity 26VNA1', db: 55, color: '#4f9cf9' },
+    { label: 'Goodman GLXS4BA36', db: 67, color: '#505870' },
+    { label: 'Goodman GXV6SS36 (standard)', db: 61, color: '#4fca8c' },
+    { label: 'Goodman GXV6SS36 (quiet mode)', db: 45, color: '#4fca8c' },
+  ];
+  const maxDb = 80;
+  const dbChart = document.getElementById('db-chart');
+  dbData.sort((a,b) => b.db - a.db);
+  dbData.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'db-row';
+    const isWinner = d.db === 45;
+    row.innerHTML = `
+      <div class="db-label" title="${d.label}">${d.label}</div>
+      <div class="db-bar-wrap">
+        <div class="db-bar" style="width:${(d.db/maxDb)*100}%; background:${d.color}; opacity:${isWinner?1:0.7};"></div>
+      </div>
+      <div class="db-val ${isWinner?'highlight':''}">${d.db} dB</div>
+    `;
+    dbChart.appendChild(row);
+  });
+
+  // SEER chart
+  const seerData = [
+    { label: 'Trane 5TTR4 (Economy)', seer: 14.3, color: '#505870' },
+    { label: 'Goodman GLXS4BA36', seer: 15.2, color: '#505870' },
+    { label: 'Trane 5TTR5 (Standard)', seer: 15.2, color: '#505870' },
+    { label: 'Carrier Performance 26SPA6', seer: 16.5, color: '#505870' },
+    { label: 'Lennox Elite EL16KC1', seer: 16.0, color: '#505870' },
+    { label: 'Trane 5TTR7 (Premium)', seer: 17.1, color: '#f97b4f' },
+    { label: 'Goodman GXV6SS36 ★', seer: 17.2, color: '#4fca8c' },
+    { label: 'Carrier Infinity 26VNA1', seer: 21.0, color: '#4f9cf9' },
+  ];
+  const maxSeer = 23;
+  const seerChart = document.getElementById('seer-chart');
+  seerData.sort((a,b) => a.seer - b.seer);
+  seerData.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'seer-row';
+    const isWinner = d.label.includes('★');
+    row.innerHTML = `
+      <div class="db-label" title="${d.label}">${d.label}</div>
+      <div class="db-bar-wrap">
+        <div class="db-bar" style="width:${(d.seer/maxSeer)*100}%; background:${d.color}; opacity:0.85;"></div>
+      </div>
+      <div class="db-val ${isWinner?'highlight':''}">${d.seer}</div>
+    `;
+    seerChart.appendChild(row);
+  });
+</script>
+</body>
+</html>
